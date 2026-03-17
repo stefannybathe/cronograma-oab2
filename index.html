@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cronograma OAB — 46º Exame</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+:root{--bg:#0f0f13;--card:#1a1a24;--border:#2a2a3a;--accent:#6c5ce7;--accent-light:#a29bfe;--green:#00b894;--orange:#fdcb6e;--red:#fd79a8;--text:#e8e8f0;--text-dim:#8888a0;--text-muted:#55556a;--white:#fff}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;padding:20px;max-width:900px;margin:0 auto}
+.header{text-align:center;padding:40px 20px 30px;margin-bottom:30px;background:linear-gradient(135deg,rgba(108,92,231,.1),rgba(0,184,148,.05));border-radius:20px;border:1px solid var(--border)}
+.header h1{font-size:28px;font-weight:800;background:linear-gradient(135deg,var(--accent-light),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.header p{color:var(--text-dim);font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:30px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center}
+.stat-card .num{font-size:26px;font-weight:800;color:var(--accent-light)}
+.stat-card .label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.stat-card.green .num{color:var(--green)}
+.progress-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 20px;margin-bottom:30px}
+.progress-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.progress-header span{font-size:13px;color:var(--text-dim)}
+.progress-header strong{font-size:14px;color:var(--accent-light)}
+.progress-bar{height:10px;background:var(--border);border-radius:10px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--green));border-radius:10px;transition:width .5s;width:0%}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px;padding:12px 16px;background:var(--card);border-radius:12px;border:1px solid var(--border);font-size:12px;color:var(--text-dim)}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.toolbar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.toolbar button{background:var(--card);border:1px solid var(--border);color:var(--text-dim);padding:8px 16px;border-radius:10px;font-size:12px;font-family:inherit;cursor:pointer;transition:all .2s}
+.toolbar button:hover{border-color:var(--accent);color:var(--accent-light)}
+.toolbar button.danger:hover{border-color:var(--red);color:var(--red)}
+.week{margin-bottom:24px;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:var(--card)}
+.week-header{padding:16px 20px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,rgba(108,92,231,.08),transparent);user-select:none;transition:background .2s}
+.week-header:hover{background:rgba(108,92,231,.12)}
+.week-header h2{font-size:16px;font-weight:700;color:var(--white)}
+.week-header .focus{font-size:12px;color:var(--accent-light);font-weight:500}
+.week-header .week-stats{display:flex;align-items:center;gap:12px}
+.week-header .week-pct{font-size:13px;font-weight:600;color:var(--green)}
+.week-header .chevron{color:var(--text-dim);transition:transform .3s;font-size:18px}
+.week.collapsed .chevron{transform:rotate(-90deg)}
+.week-body{padding:0 16px 16px}
+.week.collapsed .week-body{display:none}
+.day{margin-top:14px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--bg)}
+.day-header{padding:10px 14px;display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.02);border-bottom:1px solid var(--border)}
+.day-header .day-title{font-size:13px;font-weight:600;color:var(--text)}
+.day-header .materia{color:var(--accent-light);font-weight:500}
+.day-header .day-hours{font-size:11px;color:var(--text-muted);background:var(--card);padding:3px 8px;border-radius:6px}
+.task{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.03);transition:background .15s;cursor:pointer}
+.task:last-child{border-bottom:none}
+.task:hover{background:rgba(255,255,255,.02)}
+.task.done{opacity:.45}
+.task.done .task-name{text-decoration:line-through}
+.task input[type=checkbox]{appearance:none;-webkit-appearance:none;width:20px;height:20px;min-width:20px;border:2px solid var(--border);border-radius:6px;cursor:pointer;transition:all .2s;margin-top:1px;position:relative;background:transparent}
+.task input[type=checkbox]:checked{background:var(--green);border-color:var(--green)}
+.task input[type=checkbox]:checked::after{content:'✓';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:12px;font-weight:700}
+.task-info{flex:1;min-width:0}
+.task-name{font-size:13px;font-weight:500;color:var(--text);transition:all .2s}
+.task-meta{display:flex;gap:8px;margin-top:3px;flex-wrap:wrap;align-items:center}
+.tag{font-size:10px;padding:2px 7px;border-radius:5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+.tag.taq{background:rgba(108,92,231,.15);color:var(--accent-light)}
+.tag.ceisc{background:rgba(253,203,110,.12);color:var(--orange)}
+.tag.nlm{background:rgba(0,184,148,.12);color:var(--green)}
+.tag.simulado,.tag.checkpoint{background:rgba(253,121,168,.12);color:var(--red)}
+.tag.revisao{background:rgba(253,203,110,.12);color:var(--orange)}
+.dur{font-size:11px;color:var(--text-muted)}
+.task-link{display:inline-block;margin-top:4px;font-size:11px;color:var(--accent);text-decoration:none;opacity:.7;transition:opacity .2s}
+.task-link:hover{opacity:1;text-decoration:underline}
+.timeline-bar{margin-top:30px;padding:20px;background:var(--card);border:1px solid var(--border);border-radius:16px}
+.timeline-bar h3{font-size:16px;font-weight:700;color:var(--white);margin-bottom:14px}
+.tl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.tl-item{padding:8px 10px;border-radius:8px;font-size:11px;font-weight:600;text-align:center}
+.tl-item.done-m{background:rgba(0,184,148,.1);color:var(--green);border:1px solid rgba(0,184,148,.2)}
+.tl-item.pending{background:rgba(108,92,231,.08);color:var(--accent-light);border:1px solid rgba(108,92,231,.15)}
+.tl-item span{display:block;font-size:10px;color:var(--text-muted);font-weight:400;margin-top:2px}
+.rules{margin-top:30px;padding:24px;background:var(--card);border:1px solid var(--border);border-radius:16px}
+.rules h3{font-size:16px;font-weight:700;color:var(--white);margin-bottom:14px}
+.rules ul{list-style:none}
+.rules li{padding:6px 0;font-size:13px;color:var(--text-dim);display:flex;align-items:flex-start;gap:8px}
+.rules li::before{content:'→';color:var(--accent-light);font-weight:700;flex-shrink:0}
+.save-toast{position:fixed;bottom:20px;right:20px;background:var(--green);color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999}
+.save-toast.show{opacity:1}
+@media(max-width:600px){.stats{grid-template-columns:repeat(2,1fr)}.header h1{font-size:22px}body{padding:12px}.toolbar{flex-direction:column}}
+</style>
+</head>
+<body>
+
+<div class="header">
+<h1>Cronograma OAB — 46º Exame</h1>
+<p>17 de março a 03 de maio de 2026 · CEISC + NotebookLM</p>
+</div>
+
+<div class="stats">
+<div class="stat-card"><div class="num" id="st-total">0</div><div class="label">Tarefas</div></div>
+<div class="stat-card green"><div class="num" id="st-done">0</div><div class="label">Concluídas</div></div>
+<div class="stat-card"><div class="num" id="st-hours">0h</div><div class="label">Horas restantes</div></div>
+<div class="stat-card"><div class="num" id="st-days">0</div><div class="label">Dias p/ prova</div></div>
+</div>
+
+<div class="progress-wrap">
+<div class="progress-header"><span>Progresso geral</span><strong id="pct-label">0%</strong></div>
+<div class="progress-bar"><div class="progress-fill" id="pct-bar"></div></div>
+</div>
+
+<div class="legend">
+<span><span class="dot" style="background:var(--accent-light)"></span> TAQ</span>
+<span><span class="dot" style="background:var(--orange)"></span> Bateria CEISC</span>
+<span><span class="dot" style="background:var(--green)"></span> NLM (provas reais)</span>
+<span><span class="dot" style="background:var(--red)"></span> Simulado / Checkpoint</span>
+</div>
+
+<div class="toolbar">
+<button onclick="expandAll()">Abrir todas as semanas</button>
+<button onclick="collapseAll()">Fechar todas</button>
+<button class="danger" onclick="resetAll()">Resetar progresso</button>
+</div>
+
+<div id="weeks"></div>
+<div class="timeline-bar" id="timeline"></div>
+
+<div class="rules">
+<h3>Regras de Ouro</h3>
+<ul>
+<li>Sem tempo no dia? Pule as ⭐ e faça só ⭐⭐⭐.</li>
+<li>Ética nunca esfria — NLM todo domingo + reta final.</li>
+<li>Assista em 1.25x ou 1.5x para recuperar tempo.</li>
+<li>Bateria CEISC fixa o conteúdo. NLM treina o estilo FGV.</li>
+<li>Caderno de erros é seu melhor amigo nas semanas 6 e 7.</li>
+<li>Sábado à noite é seu. Descanso sustenta a maratona.</li>
+<li>Meta: 50+ acertos na prova (40 aprovam, mas tenha margem).</li>
+</ul>
+</div>
+
+<div class="save-toast" id="toast">✓ Progresso salvo!</div>
+
+<script>
+const STORAGE_KEY = 'oab46_cronograma_v1';
+
+const DATA=[
+{week:1,title:"Semana 1 — 17 a 22/03",focus:"Ética (fechar) + Proc. Penal + Constitucional",days:[
+{date:"TER 17/03",mat:"Processo Penal",hours:"3h",tasks:[
+{n:"TAQ: Recursos em Processo Penal pt. 2 ⭐⭐⭐",t:"taq",d:"38min",url:"https://ceisc.com.br/ead/aula/2063/897101/16963?speed=1"},
+{n:"TAQ: Recursos, Sentença e Coisa Julgada ⭐⭐⭐",t:"taq",d:"32min",url:"https://ceisc.com.br/ead/aula/2063/897109/16963?speed=1"},
+{n:"TAQ: Recursos, Sentença e Coisa Julgada pt. 2 ⭐⭐⭐",t:"taq",d:"26min",url:"https://ceisc.com.br/ead/aula/2063/897998/16963?speed=1"},
+{n:"Bateria CEISC — Processo Penal",t:"ceisc",d:"1h",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/8026f46-4ed0-86c8-55001bcb91de"}]},
+{date:"QUA 18/03",mat:"Penal",hours:"3h",tasks:[
+{n:"TAQ: Crimes contra a Honra e o Patrimônio ⭐⭐⭐",t:"taq",d:"33min",url:"https://ceisc.com.br/ead/aula/2063/886943/16963?speed=1"},
+{n:"TAQ: Crimes contra a Honra e o Patrimônio pt. 2 ⭐⭐⭐",t:"taq",d:"39min",url:"https://ceisc.com.br/ead/aula/2063/886945/16963?speed=1"},
+{n:"TAQ: Crimes contra a Fé Pública, Adm. e Justiça ⭐⭐",t:"taq",d:"31min",url:"https://ceisc.com.br/ead/aula/2063/886947/16963?speed=1"},
+{n:"Bateria CEISC — Penal",t:"ceisc",d:"1h",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/7c96781-4776-ae05-cc57e3456902"}]},
+{date:"QUI 19/03",mat:"Constitucional",hours:"3h",tasks:[
+{n:"TAQ: Ações do Controle Concentrado pt. 2 ⭐⭐⭐",t:"taq",d:"26min",url:"https://ceisc.com.br/ead/aula/2063/939159/16963?speed=1"},
+{n:"TAQ: Remédios Constitucionais pt. 1 ⭐⭐⭐",t:"taq",d:"16min",url:"https://ceisc.com.br/ead/aula/2063/939161/16963?speed=1"},
+{n:"TAQ: Remédios Constitucionais pt. 2 ⭐⭐",t:"taq",d:"27min",url:"https://ceisc.com.br/ead/aula/2063/943504/16963?speed=1"},
+{n:"TAQ: Ordem Econômica e Social pt. 1 ⭐⭐",t:"taq",d:"23min",url:"https://ceisc.com.br/ead/aula/2063/943509/16963?speed=1"},
+{n:"Bateria CEISC — Constitucional",t:"ceisc",d:"1h",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/af21effe-4e78-bb77-aeea5875dd54"}]},
+{date:"SEX 20/03",mat:"Ética (fechar)",hours:"3h30",tasks:[
+{n:"TAQ: Responsabilidade do Advogado e Publicidade pt. 2 ⭐⭐",t:"taq",d:"20min",url:"https://ceisc.com.br/ead/aula/2063/904314/16963?speed=1"},
+{n:"TAQ: Infrações e Sanções Disciplinares ⭐⭐⭐",t:"taq",d:"15min",url:"https://ceisc.com.br/ead/aula/2063/904320/16963?speed=1"},
+{n:"TAQ: Infrações e Sanções Disciplinares pt. 2 ⭐⭐⭐",t:"taq",d:"11min",url:"https://ceisc.com.br/ead/aula/2063/904327/16963?speed=1"},
+{n:"TAQ: Processo Disciplinar, Incompatibilidade ⭐⭐",t:"taq",d:"16min",url:"https://ceisc.com.br/ead/aula/2063/904337/16963?speed=1"},
+{n:"TAQ: Processo Disciplinar pt. 2 ⭐⭐",t:"taq",d:"14min",url:"https://ceisc.com.br/ead/aula/2063/904341/16963?speed=1"},
+{n:"Bateria CEISC — Ética",t:"ceisc",d:"1h",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/100edf0-4a5b-a495-3123d70c4d02"},
+{n:"NLM — 15 questões de Ética",t:"nlm",d:"30min"}]},
+{date:"SÁB 21/03",mat:"Processo Civil (início)",hours:"4h",tasks:[
+{n:"TAQ: Ação de Conhecimento I ⭐⭐⭐",t:"taq",d:"23min",url:"https://ceisc.com.br/ead/aula/2063/908896/16963?speed=1"},
+{n:"TAQ: Ação de Conhecimento I pt. 2 ⭐⭐⭐",t:"taq",d:"18min",url:"https://ceisc.com.br/ead/aula/2063/908900/16963?speed=1"},
+{n:"TAQ: Ação de Conhecimento II ⭐⭐⭐",t:"taq",d:"20min",url:"https://ceisc.com.br/ead/aula/2063/908907/16963?speed=1"},
+{n:"TAQ: Ação de Conhecimento II pt. 2 ⭐⭐⭐",t:"taq",d:"16min",url:"https://ceisc.com.br/ead/aula/2063/931196/16963?speed=1"},
+{n:"TAQ: Ação de Conhecimento III ⭐⭐⭐",t:"taq",d:"21min",url:"https://ceisc.com.br/ead/aula/2063/910770/16963?speed=1"},
+{n:"Bateria CEISC — Processo Civil",t:"ceisc",d:"1h",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/df3f2414-425e-a341-3a56a9e89b02"},
+{n:"NLM — 20 questões mistas (Ética + Penal + Proc. Penal)",t:"nlm",d:"40min"}]},
+{date:"DOM 22/03",mat:"Revisão + NLM",hours:"3h",tasks:[
+{n:"Diagnóstico CEISC (questões da semana)",t:"ceisc",d:"1h30",url:"https://ead.ceisc.com.br/ead/banco_questoes/curso/2063/bateria_de_questoes"},
+{n:"NLM — 30 questões mistas gerais",t:"nlm",d:"1h30"}]}
+]},
+{week:2,title:"Semana 2 — 23 a 29/03",focus:"Constitucional + Penal (completar) + Trabalho",days:[
+{date:"SEG 23/03",mat:"Constitucional",hours:"3h",tasks:[
+{n:"TAQ: Princípios Constitucionais e Organização pt. 2 ⭐⭐⭐",t:"taq",d:"28min",url:"https://ceisc.com.br/ead/aula/2063/945349/16963?speed=1"},
+{n:"TAQ: Direitos Fundamentais pt. 1 ⭐⭐⭐",t:"taq",d:"34min",url:"https://ceisc.com.br/ead/aula/2063/934031/16963?speed=1"},
+{n:"TAQ: Direitos Fundamentais pt. 2 ⭐⭐",t:"taq",d:"29min",url:"https://ceisc.com.br/ead/aula/2063/934033/16963?speed=1"},
+{n:"Bateria CEISC — Constitucional",t:"ceisc",d:"1h",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/af356440-4886-bec3-f2e7d4f1c251"}]},
+{date:"TER 24/03",mat:"Constitucional + Checkpoint",hours:"3h",tasks:[
+{n:"TAQ: Direitos Políticos e Nacionalidade pt. 2 ⭐⭐",t:"taq",d:"38min",url:"https://ceisc.com.br/ead/aula/2063/945353/16963?speed=1"},
+{n:"TAQ: Defesa do Estado ⭐⭐⭐",t:"taq",d:"31min",url:"https://ceisc.com.br/ead/aula/2063/945355/16963?speed=1"},
+{n:"TAQ: Poder Legislativo ⭐⭐⭐",t:"taq",d:"29min",url:"https://ceisc.com.br/ead/aula/2063/934035/16963?speed=1"},
+{n:"Bateria CEISC — Constitucional",t:"ceisc",d:"1h",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/24fd11c3-4562-bf05-525fb1493c94"},
+{n:"Checkpoint 19h: Previdenciário, Financeiro e Eleitoral",t:"checkpoint",d:"2h",url:"https://ceisc.com.br/ead/aula_sem_video/380373/2063/2137835?speed=1"}]},
+{date:"QUA 25/03",mat:"Constitucional (fechar)",hours:"3h",tasks:[
+{n:"TAQ: Processo Legislativo pt. 1 ⭐⭐⭐",t:"taq",d:"25min",url:"https://ceisc.com.br/ead/aula/2063/945357/16963?speed=1"},
+{n:"TAQ: Processo Legislativo pt. 2 ⭐⭐⭐",t:"taq",d:"35min",url:"https://ceisc.com.br/ead/aula/2063/945360/16963?speed=1"},
+{n:"TAQ: Controle de Constitucionalidade pt. 2 ⭐⭐⭐",t:"taq",d:"20min",url:"https://ceisc.com.br/ead/aula/2063/945363/16963?speed=1"},
+{n:"TAQ: Ações do Controle Concentrado pt. 1 ⭐⭐⭐",t:"taq",d:"24min",url:"https://ceisc.com.br/ead/aula/2063/939154/16963?speed=1"},
+{n:"Bateria CEISC — Constitucional",t:"ceisc",d:"1h",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/50443a9-467b-a2ac-3bd18ad63a8a"}]},
+{date:"QUI 26/03",mat:"Penal (parte 3)",hours:"3h",tasks:[
+{n:"TAQ: Causalidade, Erro e Excludentes ⭐⭐⭐",t:"taq",d:"41min",url:"https://ceisc.com.br/ead/aula/2063/899795/16963?speed=1"},
+{n:"TAQ: Causalidade, Erro e Excludentes pt. 2 ⭐⭐⭐",t:"taq",d:"26min",url:"https://ceisc.com.br/ead/aula/2063/899799/16963?speed=1"},
+{n:"Bateria CEISC — Penal",t:"ceisc",d:"1h",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/26803c4-4409-b6c6-2e4df688cfc1"}]},
+{date:"SEX 27/03",mat:"Penal (parte 4)",hours:"3h30",tasks:[
+{n:"TAQ: Imputabilidade e Concurso pt. 2 ⭐⭐⭐",t:"taq",d:"45min",url:"https://ceisc.com.br/ead/aula/2063/905034/16963?speed=1"},
+{n:"TAQ: Aplicação da Pena e Circunstâncias ⭐⭐",t:"taq",d:"49min",url:"https://ceisc.com.br/ead/aula/2063/905714/16963?speed=1"},
+{n:"Bateria CEISC — Penal",t:"ceisc",d:"1h",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/f4d8d2ff-4af4-8880-970e62bce71b"}]},
+{date:"SÁB 28/03",mat:"Trabalho (parte 2)",hours:"4h",tasks:[
+{n:"TAQ: Contrato de Trabalho pt. 2 ⭐⭐⭐",t:"taq",d:"21min",url:"https://ceisc.com.br/ead/aula/2063/887013/16963?speed=1"},
+{n:"TAQ: Jornada de Trabalho ⭐⭐⭐",t:"taq",d:"24min",url:"https://ceisc.com.br/ead/aula/2063/887018/16963?speed=1"},
+{n:"TAQ: Jornada de Trabalho pt. 2 ⭐⭐⭐",t:"taq",d:"22min",url:"https://ceisc.com.br/ead/aula/2063/887024/16963?speed=1"},
+{n:"TAQ: Remuneração e Salário ⭐⭐⭐",t:"taq",d:"24min",url:"https://ceisc.com.br/ead/aula/2063/887026/16963?speed=1"},
+{n:"Bateria CEISC — Trabalho",t:"ceisc",d:"1h",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/fa35e549-491d-bcc5-7b9fbed7410a"},
+{n:"NLM — 20 questões (Constitucional + Penal)",t:"nlm",d:"40min"}]},
+{date:"DOM 29/03",mat:"Revisão + NLM",hours:"3h",tasks:[
+{n:"Diagnóstico CEISC",t:"ceisc",d:"1h",url:"https://ead.ceisc.com.br/ead/banco_questoes/curso/2063/bateria_de_questoes"},
+{n:"NLM — 40 questões mistas gerais",t:"nlm",d:"2h"}]}
+]},
+{week:3,title:"Semana 3 — 30/03 a 05/04",focus:"Ética + Tributário + Penal (fechar) + Proc. Trabalho",days:[
+{date:"SEG 30/03",mat:"Ética (parte 3)",hours:"3h",tasks:[
+{n:"TAQ: Estagiário, Advogado Empregado pt. 2 ⭐",t:"taq",d:"22min",url:"https://ceisc.com.br/ead/aula/2063/903710/16963?speed=1"},
+{n:"TAQ: Sociedade de Advogados ⭐⭐⭐",t:"taq",d:"24min",url:"https://ceisc.com.br/ead/aula/2063/903708/16963?speed=1"},
+{n:"TAQ: Sociedade de Advogados pt. 2 ⭐⭐⭐",t:"taq",d:"21min",url:"https://ceisc.com.br/ead/aula/2063/903712/16963?speed=1"},
+{n:"Bateria CEISC — Ética",t:"ceisc",d:"1h",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/b7bb34e-48e5-a84f-cf9caf22ce54"}]},
+{date:"TER 31/03",mat:"Ética (fechar ✅)",hours:"3h",tasks:[
+{n:"TAQ: Honorários e Pro Bono ⭐⭐⭐",t:"taq",d:"14min",url:"https://ceisc.com.br/ead/aula/2063/903714/16963?speed=1"},
+{n:"TAQ: Honorários e Pro Bono pt. 2 ⭐⭐⭐",t:"taq",d:"20min",url:"https://ceisc.com.br/ead/aula/2063/903716/16963?speed=1"},
+{n:"TAQ: Direitos, Prerrogativas e Responsabilidades ⭐⭐⭐",t:"taq",d:"17min",url:"https://ceisc.com.br/ead/aula/2063/903718/16963?speed=1"},
+{n:"TAQ: Direitos, Prerrogativas pt. 2 ⭐⭐⭐",t:"taq",d:"12min",url:"https://ceisc.com.br/ead/aula/2063/904301/16963?speed=1"},
+{n:"TAQ: Responsabilidade e Publicidade ⭐⭐",t:"taq",d:"12min",url:"https://ceisc.com.br/ead/aula/2063/904305/16963?speed=1"},
+{n:"Bateria CEISC — Ética",t:"ceisc",d:"1h",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/555a819-409b-9f7b-727d5a0ecebc"}]},
+{date:"QUA 01/04",mat:"Tributário (parte 2)",hours:"3h",tasks:[
+{n:"TAQ: Obrigações, Crédito e Suspensão ⭐⭐",t:"taq",d:"27min",url:"https://ceisc.com.br/ead/aula/2063/896582/16963?speed=1"},
+{n:"TAQ: Extinção, Isenção e Anistia ⭐⭐",t:"taq",d:"20min",url:"https://ceisc.com.br/ead/aula/2063/897306/16963?speed=1"},
+{n:"TAQ: Responsabilidade Tributária pt. 2 ⭐⭐",t:"taq",d:"26min",url:"https://ceisc.com.br/ead/aula/2063/887730/16963?speed=1"},
+{n:"Bateria CEISC — Tributário",t:"ceisc",d:"1h",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/9adf019-4f95-8846-53786b93ee7f"}]},
+{date:"QUI 02/04",mat:"Tributário (fechar ✅)",hours:"3h",tasks:[
+{n:"TAQ: Ações Tributárias e Impostos Federais ⭐⭐⭐",t:"taq",d:"24min",url:"https://ceisc.com.br/ead/aula/2063/893347/16963?speed=1"},
+{n:"TAQ: Ações Tributárias pt. 2 ⭐⭐⭐",t:"taq",d:"23min",url:"https://ceisc.com.br/ead/aula/2063/893365/16963?speed=1"},
+{n:"TAQ: Impostos Estaduais e Municipais ⭐⭐⭐",t:"taq",d:"22min",url:"https://ceisc.com.br/ead/aula/2063/893378/16963?speed=1"},
+{n:"TAQ: Impostos Estaduais e Municipais pt. 2 ⭐⭐⭐",t:"taq",d:"20min",url:"https://ceisc.com.br/ead/aula/2063/901291/16963?speed=1"},
+{n:"Bateria CEISC — Tributário",t:"ceisc",d:"1h",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/cd05051-4d5f-a961-61e3f9f50e85"}]},
+{date:"SEX 03/04 🎉",mat:"Penal (fechar ✅)",hours:"3h30",tasks:[
+{n:"TAQ: Benefícios Penais e Extinção pt. 2 ⭐⭐",t:"taq",d:"33min",url:"https://ceisc.com.br/ead/aula/2063/913925/16963?speed=1"},
+{n:"TAQ: Crimes contra a Vida e Dignidade Sexual ⭐⭐⭐",t:"taq",d:"34min",url:"https://ceisc.com.br/ead/aula/2063/886936/16963?speed=1"},
+{n:"TAQ: Crimes contra a Vida e Dignidade Sexual pt. 2 ⭐⭐⭐",t:"taq",d:"35min",url:"https://ceisc.com.br/ead/aula/2063/886941/16963?speed=1"},
+{n:"Bateria CEISC — Penal",t:"ceisc",d:"1h",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/d57dfea-4803-88c5-9290b9906cc2"}]},
+{date:"SÁB 04/04",mat:"Proc. Trabalho (parte 2)",hours:"4h",tasks:[
+{n:"TAQ: Etapas do Proc. Trabalho II ⭐⭐⭐",t:"taq",d:"25min",url:"https://ceisc.com.br/ead/aula/2063/887165/16963?speed=1"},
+{n:"TAQ: Etapas do Proc. Trabalho II pt. 2 ⭐⭐⭐",t:"taq",d:"29min",url:"https://ceisc.com.br/ead/aula/2063/887167/16963?speed=1"},
+{n:"TAQ: Recursos em Proc. Trabalho ⭐⭐⭐",t:"taq",d:"25min",url:"https://ceisc.com.br/ead/aula/2063/887172/16963?speed=1"},
+{n:"Bateria CEISC — Proc. Trabalho",t:"ceisc",d:"1h",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/7e02e51-4bb2-a1f0-c401c3271ce9"},
+{n:"NLM — 20 questões (Ética + Tributário)",t:"nlm",d:"40min"}]},
+{date:"DOM 05/04 🐣",mat:"Páscoa — Descanso leve",hours:"3h",tasks:[
+{n:"NLM — 30 questões mistas (revisão geral)",t:"nlm",d:"1h30"},
+{n:"Revisar caderno de erros da semana",t:"revisao",d:"1h"}]}
+]},
+{week:4,title:"Semana 4 — 06 a 12/04",focus:"Trabalho + Proc. Trabalho + Proc. Penal + Proc. Civil (fechar)",days:[
+{date:"SEG 06/04",mat:"Trabalho (parte 3)",hours:"3h",tasks:[
+{n:"TAQ: Remuneração e Salário pt. 2 ⭐⭐⭐",t:"taq",d:"23min",url:"https://ceisc.com.br/ead/aula/2063/887028/16963?speed=1"},
+{n:"TAQ: Rescisão e Estabilidade ⭐⭐⭐",t:"taq",d:"25min",url:"https://ceisc.com.br/ead/aula/2063/887030/16963?speed=1"},
+{n:"TAQ: Rescisão e Estabilidade pt. 2 ⭐⭐⭐",t:"taq",d:"27min",url:"https://ceisc.com.br/ead/aula/2063/887032/16963?speed=1"},
+{n:"Bateria CEISC — Trabalho",t:"ceisc",d:"1h",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/efc7ad96-4b4e-a14d-21aa19e4797d"}]},
+{date:"TER 07/04",mat:"Trabalho (fechar ✅)",hours:"3h",tasks:[
+{n:"TAQ: Garantias, Estabilidade e FGTS ⭐",t:"taq",d:"23min",url:"https://ceisc.com.br/ead/aula/2063/887034/16963?speed=1"},
+{n:"TAQ: Garantias e FGTS pt. 2 ⭐",t:"taq",d:"24min",url:"https://ceisc.com.br/ead/aula/2063/887036/16963?speed=1"},
+{n:"TAQ: Direito Coletivo e Tutelas ⭐⭐",t:"taq",d:"24min",url:"https://ceisc.com.br/ead/aula/2063/887038/16963?speed=1"},
+{n:"TAQ: Direito Coletivo pt. 2 ⭐⭐",t:"taq",d:"22min",url:"https://ceisc.com.br/ead/aula/2063/887040/16963?speed=1"},
+{n:"Bateria CEISC — Trabalho",t:"ceisc",d:"1h",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/52f7e5fd-46da-b49a-2c5c8b0a14b8"}]},
+{date:"QUA 08/04",mat:"Proc. Penal (fechar ✅)",hours:"3h",tasks:[
+{n:"TAQ: Provas e Prisões ⭐⭐⭐",t:"taq",d:"28min",url:"https://ceisc.com.br/ead/aula/2063/898580/16963?speed=1"},
+{n:"TAQ: Provas e Prisões pt. 2 ⭐⭐⭐",t:"taq",d:"28min",url:"https://ceisc.com.br/ead/aula/2063/898582/16963?speed=1"},
+{n:"TAQ: Ação Penal, Procedimentos e JEC pt. 2 ⭐⭐⭐",t:"taq",d:"26min",url:"https://ceisc.com.br/ead/aula/2063/893317/16963?speed=1"},
+{n:"TAQ: Recursos em Processo Penal ⭐⭐⭐",t:"taq",d:"31min",url:"https://ceisc.com.br/ead/aula/2063/893331/16963?speed=1"},
+{n:"Bateria CEISC — Proc. Penal",t:"ceisc",d:"1h",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/7d59d2f-41c4-97a4-aaeb27a51c46"}]},
+{date:"QUI 09/04",mat:"Proc. Trabalho (fechar ✅)",hours:"3h",tasks:[
+{n:"TAQ: Execução Trabalhista ⭐⭐⭐",t:"taq",d:"28min",url:"https://ceisc.com.br/ead/aula/2063/887183/16963?speed=1"},
+{n:"TAQ: Execução Trabalhista pt. 2 ⭐⭐⭐",t:"taq",d:"30min",url:"https://ceisc.com.br/ead/aula/2063/887190/16963?speed=1"},
+{n:"TAQ: Ações Especiais ⭐⭐⭐",t:"taq",d:"28min",url:"https://ceisc.com.br/ead/aula/2063/887194/16963?speed=1"},
+{n:"Bateria CEISC — Proc. Trabalho",t:"ceisc",d:"1h",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/18f8fc64-4856-bbd8-a2f36a1cf785"}]},
+{date:"SEX 10/04",mat:"Proc. Civil (cont.)",hours:"3h30",tasks:[
+{n:"TAQ: Ação de Conhecimento IV ⭐⭐",t:"taq",d:"19min",url:"https://ceisc.com.br/ead/aula/2063/910778/16963?speed=1"},
+{n:"TAQ: Ação de Conhecimento IV pt. 2 ⭐⭐",t:"taq",d:"15min",url:"https://ceisc.com.br/ead/aula/2063/910783/16963?speed=1"},
+{n:"TAQ: Processo de Execução ⭐⭐",t:"taq",d:"23min",url:"https://ceisc.com.br/ead/aula/2063/950318/16963?speed=1"},
+{n:"TAQ: Processo de Execução pt. 2 ⭐⭐",t:"taq",d:"22min",url:"https://ceisc.com.br/ead/aula/2063/950319/16963?speed=1"},
+{n:"Bateria CEISC — Proc. Civil",t:"ceisc",d:"1h",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/ee3c26a-4e82-bb4a-2b0ceb52c298"}]},
+{date:"SÁB 11/04",mat:"Proc. Civil (cont.)",hours:"4h",tasks:[
+{n:"TAQ: Procedimentos Especiais I pt. 2 ⭐⭐",t:"taq",d:"31min",url:"https://ceisc.com.br/ead/aula/2063/898658/16963?speed=1"},
+{n:"TAQ: Procedimentos Especiais II ⭐⭐",t:"taq",d:"42min",url:"https://ceisc.com.br/ead/aula/2063/898980/16963?speed=1"},
+{n:"TAQ: Recursos em Proc. Civil I ⭐⭐",t:"taq",d:"34min",url:"https://ceisc.com.br/ead/aula/2063/898663/16963?speed=1"},
+{n:"Bateria CEISC — Proc. Civil",t:"ceisc",d:"1h",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/9636e68-4229-8c8a-849316efed57"},
+{n:"NLM — 20 questões (Ética + pior matéria)",t:"nlm",d:"30min"}]},
+{date:"DOM 12/04",mat:"Simulado CEISC",hours:"3h+",tasks:[
+{n:"Simulado Autoral Revisão Turbo 46º Exame",t:"simulado",d:"3-5h",url:"https://ead.ceisc.com.br/ead/banco_questoes/curso/2063/treinamentos"}]}
+]},
+{week:5,title:"Semana 5 — 13 a 19/04",focus:"Civil + Administrativo + Checkpoint matérias menores",days:[
+{date:"SEG 13/04",mat:"Civil (parte 1)",hours:"3h",tasks:[
+{n:"TAQ: Parte Geral I ⭐⭐",t:"taq",d:"34min",url:"https://ceisc.com.br/ead/aula/2063/887213/16963?speed=1"},
+{n:"TAQ: Parte Geral II ⭐⭐⭐",t:"taq",d:"38min",url:"https://ceisc.com.br/ead/aula/2063/893717/16963?speed=1"},
+{n:"TAQ: Parte Geral II pt. 2 ⭐⭐⭐",t:"taq",d:"34min",url:"https://ceisc.com.br/ead/aula/2063/895118/16963?speed=1"},
+{n:"Bateria CEISC — Civil",t:"ceisc",d:"30min",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/c4b4f02-4bb1-9a25-d2ecf56c7628"}]},
+{date:"TER 14/04",mat:"Civil (parte 2) + Checkpoint",hours:"3h",tasks:[
+{n:"TAQ: Obrigações ⭐⭐⭐",t:"taq",d:"35min",url:"https://ceisc.com.br/ead/aula/2063/899159/16963?speed=1"},
+{n:"TAQ: Obrigações pt. 2 ⭐⭐⭐",t:"taq",d:"35min",url:"https://ceisc.com.br/ead/aula/2063/899181/16963?speed=1"},
+{n:"TAQ: Contratos I ⭐⭐⭐",t:"taq",d:"37min",url:"https://ceisc.com.br/ead/aula/2063/899202/16963?speed=1"},
+{n:"Checkpoint 19h: Internacional, Ambiental, Humanos, CDC, ECA, Filosofia",t:"checkpoint",d:"2h",url:"https://ceisc.com.br/ead/aula_sem_video/380376/2063/2137835?speed=1"}]},
+{date:"QUA 15/04",mat:"Civil (parte 3)",hours:"3h",tasks:[
+{n:"TAQ: Contratos I pt. 2 ⭐⭐⭐",t:"taq",d:"32min",url:"https://ceisc.com.br/ead/aula/2063/899786/16963?speed=1"},
+{n:"TAQ: Responsabilidade Civil ⭐",t:"taq",d:"29min",url:"https://ceisc.com.br/ead/aula/2063/899811/16963?speed=1"},
+{n:"TAQ: Responsabilidade Civil pt. 2 ⭐",t:"taq",d:"27min",url:"https://ceisc.com.br/ead/aula/2063/899818/16963?speed=1"},
+{n:"Bateria CEISC — Civil",t:"ceisc",d:"1h",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/d0a581e-4252-a15b-9299a36e5a0d"}]},
+{date:"QUI 16/04",mat:"Civil (parte 4)",hours:"3h",tasks:[
+{n:"TAQ: Coisas I ⭐⭐⭐",t:"taq",d:"37min",url:"https://ceisc.com.br/ead/aula/2063/908871/16963?speed=1"},
+{n:"TAQ: Coisas II ⭐⭐",t:"taq",d:"33min",url:"https://ceisc.com.br/ead/aula/2063/908879/16963?speed=1"},
+{n:"TAQ: Família e Sucessões I pt. 2 ⭐⭐",t:"taq",d:"36min",url:"https://ceisc.com.br/ead/aula/2063/907910/16963?speed=1"},
+{n:"Bateria CEISC — Civil",t:"ceisc",d:"30min",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/cc88ea3-41ea-a5ce-29d0c671a275"}]},
+{date:"SEX 17/04",mat:"Civil (fechar ✅) + Adm",hours:"3h30",tasks:[
+{n:"TAQ: Família e Sucessões III pt. 2 ⭐⭐⭐",t:"taq",d:"28min",url:"https://ceisc.com.br/ead/aula/2063/903460/16963?speed=1"},
+{n:"TAQ: Organização da Adm. Pública pt. 2 ⭐⭐⭐",t:"taq",d:"29min",url:"https://ceisc.com.br/ead/aula/2063/888290/16963?speed=1"},
+{n:"TAQ: Agentes Públicos I ⭐⭐⭐",t:"taq",d:"22min",url:"https://ceisc.com.br/ead/aula/2063/911331/16963?speed=1"},
+{n:"TAQ: Agentes Públicos I pt. 2 ⭐⭐⭐",t:"taq",d:"23min",url:"https://ceisc.com.br/ead/aula/2063/911345/16963?speed=1"},
+{n:"Bateria CEISC — Administrativo",t:"ceisc",d:"1h",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/3316524-4a0c-a14b-c9d9c360ca28"}]},
+{date:"SÁB 18/04",mat:"Administrativo (cont.)",hours:"4h",tasks:[
+{n:"TAQ: Serviços Públicos e Proc. Adm. ⭐⭐⭐",t:"taq",d:"22min",url:"https://ceisc.com.br/ead/aula/2063/911365/16963?speed=1"},
+{n:"TAQ: Serviços Públicos pt. 2 ⭐⭐⭐",t:"taq",d:"22min",url:"https://ceisc.com.br/ead/aula/2063/911369/16963?speed=1"},
+{n:"TAQ: Improbidade Administrativa ⭐⭐",t:"taq",d:"30min",url:"https://ceisc.com.br/ead/aula/2063/900929/16963?speed=1"},
+{n:"TAQ: Licitações e Contratos ⭐⭐⭐",t:"taq",d:"27min",url:"https://ceisc.com.br/ead/aula/2063/897320/16963?speed=1"},
+{n:"Bateria CEISC — Administrativo",t:"ceisc",d:"1h",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/c9f92cfc-44ca-837e-b57c0cd55df3"},
+{n:"NLM — 15 questões Ética (manutenção)",t:"nlm",d:"20min"}]},
+{date:"DOM 19/04",mat:"Descanso + NLM",hours:"3h",tasks:[
+{n:"NLM — 40 questões mistas (Civil + revisão geral)",t:"nlm",d:"2h"},
+{n:"Revisar caderno de erros do simulado 12/04",t:"revisao",d:"1h"}]}
+]},
+{week:6,title:"Semana 6 — 20 a 26/04",focus:"🚀 Revisão Turbo + Empresarial + Adm + Proc. Civil (fechar)",days:[
+{date:"SEG 20/04",mat:"Rev. Turbo + Empresarial",hours:"3h",tasks:[
+{n:"Revisão Turbo CEISC (dia 1)",t:"revisao",d:"1h30",url:"https://ceisc.com.br"},
+{n:"TAQ: Teoria Geral (Empresarial) ⭐⭐",t:"taq",d:"32min",url:"https://ceisc.com.br/ead/aula/2063/895031/16963?speed=1"},
+{n:"TAQ: Sociedade Empresarial I ⭐⭐⭐",t:"taq",d:"25min",url:"https://ceisc.com.br/ead/aula/2063/898526/16963?speed=1"},
+{n:"TAQ: Sociedade Empresarial I pt. 2 ⭐⭐⭐",t:"taq",d:"23min",url:"https://ceisc.com.br/ead/aula/2063/919733/16963?speed=1"}]},
+{date:"TER 21/04 🎉",mat:"Rev. Turbo + Empresarial",hours:"3h",tasks:[
+{n:"Revisão Turbo CEISC (dia 2)",t:"revisao",d:"1h30",url:"https://ceisc.com.br"},
+{n:"TAQ: Sociedade Empresarial II ⭐⭐⭐",t:"taq",d:"22min",url:"https://ceisc.com.br/ead/aula/2063/919736/16963?speed=1"},
+{n:"TAQ: Sociedade Empresarial II pt. 2 ⭐⭐⭐",t:"taq",d:"28min",url:"https://ceisc.com.br/ead/aula/2063/919729/16963?speed=1"},
+{n:"TAQ: Títulos de Crédito ⭐⭐⭐",t:"taq",d:"24min",url:"https://ceisc.com.br/ead/aula/2063/912428/16963?speed=1"}]},
+{date:"QUA 22/04",mat:"Rev. Turbo + Empresarial (fechar ✅)",hours:"3h",tasks:[
+{n:"Revisão Turbo CEISC (dia 3)",t:"revisao",d:"1h",url:"https://ceisc.com.br"},
+{n:"TAQ: Títulos de Crédito pt. 2 ⭐⭐⭐",t:"taq",d:"27min",url:"https://ceisc.com.br/ead/aula/2063/912430/16963?speed=1"},
+{n:"TAQ: Recuperação Judicial ⭐⭐⭐",t:"taq",d:"22min",url:"https://ceisc.com.br/ead/aula/2063/912435/16963?speed=1"},
+{n:"TAQ: Recuperação Judicial pt. 2 ⭐⭐⭐",t:"taq",d:"19min",url:"https://ceisc.com.br/ead/aula/2063/912438/16963?speed=1"},
+{n:"TAQ: Falência ⭐⭐⭐",t:"taq",d:"22min",url:"https://ceisc.com.br/ead/aula/2063/912442/16963?speed=1"}]},
+{date:"QUI 23/04",mat:"Rev. Turbo + Adm (fechar ✅)",hours:"3h",tasks:[
+{n:"Revisão Turbo CEISC (dia 4)",t:"revisao",d:"1h",url:"https://ceisc.com.br"},
+{n:"TAQ: Licitações e Contratos pt. 2 ⭐⭐⭐",t:"taq",d:"32min",url:"https://ceisc.com.br/ead/aula/2063/897322/16963?speed=1"},
+{n:"TAQ: Intervenção do Estado ⭐⭐⭐",t:"taq",d:"29min",url:"https://ceisc.com.br/ead/aula/2063/897326/16963?speed=1"},
+{n:"TAQ: Intervenção do Estado pt. 2 ⭐⭐⭐",t:"taq",d:"31min",url:"https://ceisc.com.br/ead/aula/2063/897330/16963?speed=1"}]},
+{date:"SEX 24/04",mat:"Rev. Turbo + Proc. Civil (fechar ✅)",hours:"3h30",tasks:[
+{n:"Revisão Turbo CEISC (dia 5)",t:"revisao",d:"1h",url:"https://ceisc.com.br"},
+{n:"TAQ: Recursos Proc. Civil I pt. 2 ⭐⭐",t:"taq",d:"31min",url:"https://ceisc.com.br/ead/aula/2063/898667/16963?speed=1"},
+{n:"TAQ: Recursos Proc. Civil II ⭐⭐⭐",t:"taq",d:"30min",url:"https://ceisc.com.br/ead/aula/2063/899080/16963?speed=1"},
+{n:"TAQ: Recursos Proc. Civil II pt. 2 ⭐⭐⭐",t:"taq",d:"22min",url:"https://ceisc.com.br/ead/aula/2063/899113/16963?speed=1"},
+{n:"Bateria CEISC — Proc. Civil",t:"ceisc",d:"30min",url:"https://ead.ceisc.com.br/ead/banco_questoes/modo_comentado/oab_1fase/bateria_de_questoes/d49712d-48a2-9697-83604782de6a"}]},
+{date:"SÁB 25/04",mat:"Revisão Turbo integral",hours:"4h",tasks:[
+{n:"Revisão Turbo CEISC (dia 6)",t:"revisao",d:"2h30",url:"https://ceisc.com.br"},
+{n:"NLM — 30 questões (Ética + Civil + Empresarial)",t:"nlm",d:"1h"},
+{n:"Revisar caderno de erros",t:"revisao",d:"30min"}]},
+{date:"DOM 26/04",mat:"Rev. Turbo + NLM",hours:"3h",tasks:[
+{n:"Revisão Turbo CEISC (dia 7)",t:"revisao",d:"1h30",url:"https://ceisc.com.br"},
+{n:"NLM — 40 questões mistas gerais",t:"nlm",d:"1h30"}]}
+]},
+{week:7,title:"Semana 7 — 27/04 a 03/05",focus:"🎯 Reta final — Revisão Turbo + polimento",days:[
+{date:"SEG 27/04",mat:"Revisão Turbo",hours:"3h",tasks:[
+{n:"Revisão Turbo CEISC (dia 8)",t:"revisao",d:"2h",url:"https://ceisc.com.br"},
+{n:"NLM — 20 questões (pontos fracos)",t:"nlm",d:"1h"}]},
+{date:"TER 28/04",mat:"Revisão Turbo",hours:"3h",tasks:[
+{n:"Revisão Turbo CEISC (dia 9)",t:"revisao",d:"2h",url:"https://ceisc.com.br"},
+{n:"Refazer questões erradas dos simulados",t:"revisao",d:"1h"}]},
+{date:"QUA 29/04",mat:"Revisão Turbo",hours:"3h",tasks:[
+{n:"Revisão Turbo CEISC (dia 10)",t:"revisao",d:"2h",url:"https://ceisc.com.br"},
+{n:"NLM — 30 questões de Ética (revisão final)",t:"nlm",d:"1h"}]},
+{date:"QUI 30/04",mat:"Revisão Turbo",hours:"3h",tasks:[
+{n:"Revisão Turbo CEISC (dia 11)",t:"revisao",d:"1h30",url:"https://ceisc.com.br"},
+{n:"Caderno de erros completo — última revisão",t:"revisao",d:"1h30"}]},
+{date:"SEX 01/05 🎉",mat:"Feriado — Estudo leve",hours:"2h",tasks:[
+{n:"Revisão Turbo CEISC (dia 12)",t:"revisao",d:"1h",url:"https://ceisc.com.br"},
+{n:"NLM — 20 questões leves (confiança)",t:"nlm",d:"1h"}]},
+{date:"SÁB 02/05",mat:"Último dia",hours:"2h",tasks:[
+{n:"Revisão Turbo CEISC (último dia)",t:"revisao",d:"1h",url:"https://ceisc.com.br"},
+{n:"Releitura final do caderno de erros",t:"revisao",d:"1h"},
+{n:"⛔ PARAR ÀS 14H. Descansar. Dormir cedo.",t:"revisao",d:"—"}]},
+{date:"DOM 03/05",mat:"🎯 DIA DA PROVA",hours:"—",tasks:[
+{n:"46º Exame de Ordem — Boa prova! Você consegue! 💪",t:"simulado",d:"5h"}]}
+]}
+];
+
+// Load/save with localStorage
+function loadState(){try{const s=localStorage.getItem(STORAGE_KEY);return s?JSON.parse(s):{}}catch(e){return{}}}
+function saveState(st){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(st));showToast()}catch(e){}}
+function showToast(){const t=document.getElementById('toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1500)}
+
+let checked=loadState();
+let allTasks=[];
+let taskIdx=0;
+
+function parseMin(d){
+if(!d||d==='—')return 0;
+let m=0;const hm=d.match(/(\d+)h(\d+)?/);
+if(hm){m+=parseInt(hm[1])*60;if(hm[2])m+=parseInt(hm[2]);return m}
+const h=d.match(/^(\d+)h$/);if(h)return parseInt(h[1])*60;
+const mi=d.match(/(\d+)\s*min/);if(mi)return parseInt(mi[1]);
+const r=d.match(/(\d+)-(\d+)h/);if(r)return parseInt(r[1])*60;
+return 30;
+}
+
+function render(){
+const wrap=document.getElementById('weeks');wrap.innerHTML='';allTasks=[];taskIdx=0;
+DATA.forEach(w=>{
+const wDiv=document.createElement('div');wDiv.className='week';
+let wIds=[],bodyHtml='';
+w.days.forEach(day=>{
+let dh=`<div class="day"><div class="day-header"><div class="day-title">${day.date} — <span class="materia">${day.mat}</span></div><div class="day-hours">${day.hours}</div></div>`;
+day.tasks.forEach(task=>{
+const id='t'+taskIdx;allTasks.push({id,task,min:parseMin(task.d)});wIds.push(id);
+const done=!!checked[id];
+dh+=`<div class="task ${done?'done':''}" data-id="${id}"><input type="checkbox" ${done?'checked':''}><div class="task-info"><div class="task-name">${task.n}</div><div class="task-meta"><span class="tag ${task.t}">${task.t.toUpperCase()}</span><span class="dur">${task.d}</span></div>${task.url?`<a class="task-link" href="${task.url}" target="_blank">Abrir no CEISC ↗</a>`:''}</div></div>`;
+taskIdx++;
+});
+dh+='</div>';bodyHtml+=dh;
+});
+const wDone=wIds.filter(id=>checked[id]).length;
+const pct=wIds.length?Math.round(wDone/wIds.length*100):0;
+wDiv.innerHTML=`<div class="week-header"><div><h2>${w.title}</h2><div class="focus">${w.focus}</div></div><div class="week-stats"><span class="week-pct">${pct}%</span><span class="chevron">▼</span></div></div><div class="week-body">${bodyHtml}</div>`;
+wDiv.querySelector('.week-header').addEventListener('click',()=>{wDiv.classList.toggle('collapsed')});
+wrap.appendChild(wDiv);
+});
+document.querySelectorAll('.task').forEach(el=>{
+el.addEventListener('click',e=>{
+if(e.target.tagName==='A')return;
+const id=el.dataset.id,cb=el.querySelector('input');
+checked[id]=!checked[id];cb.checked=checked[id];
+el.classList.toggle('done',checked[id]);
+saveState(checked);updateStats();
+// Update week pct
+const wk=el.closest('.week');if(wk){
+const ts=wk.querySelectorAll('.task'),dn=[...ts].filter(t=>t.classList.contains('done')).length;
+wk.querySelector('.week-pct').textContent=Math.round(dn/ts.length*100)+'%';
+}
+});
+});
+updateStats();
+}
+
+function updateStats(){
+const total=allTasks.length,done=allTasks.filter(t=>checked[t.id]).length;
+const rem=allTasks.filter(t=>!checked[t.id]);
+const hrs=Math.round(rem.reduce((a,t)=>a+t.min,0)/60);
+const pct=total?Math.round(done/total*100):0;
+document.getElementById('st-total').textContent=total;
+document.getElementById('st-done').textContent=done;
+document.getElementById('st-hours').textContent=hrs+'h';
+document.getElementById('pct-label').textContent=pct+'%';
+document.getElementById('pct-bar').style.width=pct+'%';
+const exam=new Date(2026,4,3),now=new Date();
+document.getElementById('st-days').textContent=Math.max(0,Math.ceil((exam-now)/(864e5)));
+const mats=[{n:'Ética',d:'31/03'},{n:'Tributário',d:'02/04'},{n:'Penal',d:'03/04'},{n:'Proc. Penal',d:'08/04'},{n:'Trabalho',d:'07/04'},{n:'Proc. Trabalho',d:'09/04'},{n:'Proc. Civil',d:'24/04'},{n:'Civil',d:'17/04'},{n:'Administrativo',d:'23/04'},{n:'Empresarial',d:'22/04'},{n:'Menores',d:'Rev. Turbo'}];
+const tl=document.getElementById('timeline');
+tl.innerHTML='<h3>Quando cada matéria fecha</h3><div class="tl-grid">'+mats.map(m=>{
+const p=parseBR(m.d),isDone=p&&p<new Date();
+return`<div class="tl-item ${isDone?'done-m':'pending'}">${m.n}<span>${m.d}</span></div>`;
+}).join('')+'</div>';
+}
+function parseBR(s){if(!s||s.includes('Turbo'))return null;const[d,m]=s.split('/').map(Number);return new Date(2026,m-1,d)}
+
+function expandAll(){document.querySelectorAll('.week').forEach(w=>w.classList.remove('collapsed'))}
+function collapseAll(){document.querySelectorAll('.week').forEach(w=>w.classList.add('collapsed'))}
+function resetAll(){if(confirm('Tem certeza? Isso vai apagar todo o seu progresso.')){checked={};localStorage.removeItem(STORAGE_KEY);render()}}
+
+render();
+</script>
+</body>
+</html>
